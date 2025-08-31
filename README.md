@@ -10,7 +10,6 @@ A small, production‑style demo of a banking API with **three‑layer design** 
 - Get transaction history per account (most recent first, with type = DEBIT/CREDIT)
 - Input validation with Jakarta Bean Validation
 - Global exception handler with consistent JSON errors
-- OpenAPI/Swagger UI at `/swagger-ui/index.html`
 - Thread‑safety with per‑account locks and ordered locking
 - Minimal tests with MockMvc
 
