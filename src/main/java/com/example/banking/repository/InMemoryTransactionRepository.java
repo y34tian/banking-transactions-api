@@ -7,6 +7,7 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
+// In-memory repository backed by ConcurrentHashMap
 @Repository
 public class InMemoryTransactionRepository implements TransactionRepository {
     private final Map<UUID, Transaction> transactions = new ConcurrentHashMap<>();

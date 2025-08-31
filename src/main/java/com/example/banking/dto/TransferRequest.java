@@ -15,8 +15,11 @@ public class TransferRequest {
 
     @NotNull
     @Positive
+    // Use BigDecimal for monetary amount to avoid floating point precision issues
+    // Validation annotations ensure amount > 0 and required fields are present
     private BigDecimal amount;
 
+    // Single-currency demo: default CAD. All three (from, to, request) must match.
     private String currency = "CAD";
 
     public UUID getFromAccountId() { return fromAccountId; }

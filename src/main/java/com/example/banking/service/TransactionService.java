@@ -35,28 +35,30 @@ public class TransactionService {
     }
 
     public TransferResponse transfer(TransferRequest req, String idempotencyKey) {
+//        disallow self-transfer
         if (req.getFromAccountId().equals(req.getToAccountId())) {
             throw new BadRequestException("fromAccountId and toAccountId cannot be the same");
         }
+//        amount must be > 0
         if (req.getAmount().compareTo(new BigDecimal("0.00")) <= 0) {
             throw new BadRequestException("Transfer amount must be positive");
         }
+//        if this key was seen, return the original response (prevents double charge）
         if (idempotencyKey != null) {
             TransferResponse existed = idempotencyRepository.get(idempotencyKey);
             if (existed != null) return existed;
         }
 
+//        Fetch both accounts or 404
         Account from = accountRepository.findById(req.getFromAccountId())
                 .orElseThrow(() -> new com.example.banking.exception.NotFoundException("From account not found: " + req.getFromAccountId()));
         Account to = accountRepository.findById(req.getToAccountId())
                 .orElseThrow(() -> new com.example.banking.exception.NotFoundException("To account not found: " + req.getToAccountId()));
-
+//        both accounts and request currency must match（Single-currency system per transfer）
         if (!from.getCurrency().equals(to.getCurrency()) || !from.getCurrency().equals(req.getCurrency())) {
             throw new BadRequestException("Currency mismatch; all must be the same");
         }
 
-        ReentrantLock lockA = accountRepository.lockFor(from.getId());
-        ReentrantLock lockB = accountRepository.lockFor(to.getId());
 
         // Acquire locks in ID order to avoid deadlocks
         Account[] ordered = new Account[]{from, to};
@@ -77,17 +79,23 @@ public class TransactionService {
                 accountRepository.save(from);
                 accountRepository.save(to);
 
-                UUID txId = UUID.randomUUID();
+                // Generate distinct IDs so both entries exist independently
+                UUID debitId = UUID.randomUUID();
+                UUID creditId = UUID.randomUUID();
                 Instant now = Instant.now();
 
-                // Save two directional entries for clearer history
-                Transaction debit = new Transaction(txId, from.getId(), to.getId(), amt, from.getCurrency(), now, TransactionType.TRANSFER_DEBIT, idempotencyKey);
-                Transaction credit = new Transaction(txId, from.getId(), to.getId(), amt, to.getCurrency(), now, TransactionType.TRANSFER_CREDIT, idempotencyKey);
+                // two directional entries for clearer history (debit for 'from', credit for 'to')
+                Transaction debit = new Transaction(debitId, from.getId(), to.getId(), amt, from.getCurrency(), now,
+                        TransactionType.TRANSFER_DEBIT, idempotencyKey);
+                Transaction credit = new Transaction(creditId, from.getId(), to.getId(), amt, to.getCurrency(), now,
+                        TransactionType.TRANSFER_CREDIT, idempotencyKey);
+
                 transactionRepository.save(debit);
                 transactionRepository.save(credit);
 
-                TransferResponse res = new TransferResponse(txId, from.getId(), to.getId(), amt, from.getCurrency(), now,
-                        from.getBalance(), to.getBalance());
+                // can keep TransferResponse.transactionId as debitId (or rename to groupId if you want)
+                TransferResponse res = new TransferResponse(
+                        debitId, from.getId(), to.getId(), amt, from.getCurrency(), now, from.getBalance(), to.getBalance());
                 if (idempotencyKey != null) {
                     idempotencyRepository.put(idempotencyKey, res);
                 }

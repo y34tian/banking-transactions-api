@@ -9,6 +9,7 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.ReentrantLock;
 
+// In-memory repository backed by ConcurrentHashMap
 @Repository
 public class InMemoryAccountRepository implements AccountRepository {
 

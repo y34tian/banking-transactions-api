@@ -20,12 +20,19 @@ public class AccountController {
     public AccountController(AccountService accountService) {
         this.accountService = accountService;
     }
-
+    /**
+     * POST /api/accounts - Create a new account with an initial balance.
+     * Validates input via Jakarta Bean Validation and returns the created account summary.
+     */
     @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
     public CreateAccountResponse create(@Valid @RequestBody CreateAccountRequest req) {
         return accountService.create(req);
     }
 
+    /**
+     * GET /api/accounts/{accountId}/transactions - Recent transactions for the account (most recent first).
+     * @param limit max items (1..200)
+     */
     @GetMapping("/{accountId}/transactions")
     public List<TransactionDTO> history(@PathVariable UUID accountId,
                                         @RequestParam(defaultValue = "50") int limit) {
