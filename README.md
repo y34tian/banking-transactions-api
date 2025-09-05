@@ -1,5 +1,4 @@
-# Banking Transactions API (Spring Boot, In‑Memory)
-
+# Banking Transactions API
 A demo of a banking API with **three‑layer design** (Controller → Service → Repository),
 **dependency injection**, **DTOs**, **validation**, **error handling**, **idempotent transfers**, and **in‑memory storage**.
 
