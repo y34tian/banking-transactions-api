@@ -19,14 +19,6 @@ Requirements: Java 17+, Maven 3.9+
 
 ```bash
 mvn spring-boot:run
-# then open http://localhost:8080/swagger-ui/index.html
-```
-
-Or build a jar:
-
-```bash
-mvn clean package
-java -jar target/banking-transactions-api-0.0.1-SNAPSHOT.jar
 ```
 
 ## API
